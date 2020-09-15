@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/sha256"
 	"log"
 	"net/http"
 
@@ -46,6 +47,8 @@ func (su *ServiceUser) CreateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
 		return
 	}
+	pass_hash := sha256.Sum256([]byte(u.Pass))
+	u.Pass = string(pass_hash[:])
 	err = su.db.AddUser(&u)
 	if err != nil {
 		log.Println(err)
