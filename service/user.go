@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"apiyoutube/db"
+	"apiyoutube/model"
 )
 
 type ServiceUser struct {
@@ -29,5 +30,28 @@ func (su *ServiceUser) GetUser(ctx *gin.Context) {
 		})
 		return
 	}
+	ctx.JSON(http.StatusOK, u)
+}
+
+func (su *ServiceUser) GetListUser(ctx *gin.Context) {
+
+	ctx.JSON(http.StatusOK, su.db.GetListUser())
+}
+
+func (su *ServiceUser) CreateUser(ctx *gin.Context) {
+	var u model.User
+	err := ctx.BindJSON(&u)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
+		return
+	}
+	err = su.db.AddUser(&u)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "db"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, u)
 }

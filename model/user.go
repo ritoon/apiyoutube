@@ -12,10 +12,12 @@ type User struct {
 
 func (u User) MarshalJSON() ([]byte, error) {
 	aux := struct {
+		UUID      string `json:"uuid"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
 		Email     string `json:"email"`
 	}{
+		UUID:      u.UUID,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Email:     u.Email,

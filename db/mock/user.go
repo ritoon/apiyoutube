@@ -27,22 +27,22 @@ func (db MockDB) initUser() {
 		LastName:  "Pike",
 	}
 
-	db.AddUser(u)
+	db.AddUser(&u)
 
 	u2 := model.User{
 		FirstName: "Marie",
 		LastName:  "Curie",
 	}
 
-	db.AddUser(u2)
+	db.AddUser(&u2)
 }
 
 // AddUser is adding a new user in the MockDB.
 // this send an error if the user allready exsits in the MockDB.
-func (db *MockDB) AddUser(u model.User) error {
+func (db *MockDB) AddUser(u *model.User) error {
 	id := uuid.New().String()
 	u.UUID = id
-	db.listUser[u.UUID] = &u
+	db.listUser[u.UUID] = u
 	return nil
 }
 
@@ -73,4 +73,9 @@ func (db *MockDB) DeleteUser(uuid string) error {
 	}
 	delete(db.listUser, uuid)
 	return nil
+}
+
+// GetListUser retrive all users from the db.
+func (db *MockDB) GetListUser() map[string]*model.User {
+	return db.listUser
 }

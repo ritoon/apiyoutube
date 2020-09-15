@@ -13,14 +13,14 @@ func VerifyJWT() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		value := ctx.Request.Header.Get("authorization")
 		if len(value) == 0 {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "need a JWT",
 			})
 			return
 		}
 		res := strings.Split(value, " ")
 		if len(res) <= 1 || res[0] != "Bearer" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "need a JWT",
 			})
 			return
