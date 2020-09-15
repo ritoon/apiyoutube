@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 )
 
 func VerifyJWT() gin.HandlerFunc {
@@ -19,7 +19,7 @@ func VerifyJWT() gin.HandlerFunc {
 			return
 		}
 		res := strings.Split(value, " ")
-		if len(res) <= 1 && res[0] == "Bearer" {
+		if len(res) <= 1 || res[0] != "Bearer" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"error": "need a JWT",
 			})

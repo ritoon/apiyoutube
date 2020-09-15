@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
+	
 	"apiyoutube/db/mock"
 	"apiyoutube/middleware"
 	"apiyoutube/service"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
