@@ -2,8 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-
+	
 	"apiyoutube/db/mock"
+	"apiyoutube/middleware"
 	"apiyoutube/service"
 )
 
@@ -16,4 +17,3 @@ func main() {
 	r.GET("/user/:uuid", su.GetUser)
 	r.Run()
 }
-

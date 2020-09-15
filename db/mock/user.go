@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ritoon/cours/discover/apiyoutube/model"
+	"apiyoutube/model"
 )
 
 // MockDB is use to simulate a db connection.
