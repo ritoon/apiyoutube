@@ -40,8 +40,7 @@ func (db MockDB) initUser() {
 // AddUser is adding a new user in the MockDB.
 // this send an error if the user allready exsits in the MockDB.
 func (db *MockDB) AddUser(u *model.User) error {
-	id := uuid.New().String()
-	u.UUID = id
+	u.UUID = uuid.New().String()
 	db.listUser[u.UUID] = u
 	return nil
 }
