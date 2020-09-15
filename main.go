@@ -12,6 +12,8 @@ func main() {
 	su := service.NewUser(db)
 
 	r := gin.Default()
+	r.Use(middleware.VerifyJWT())
 	r.GET("/user/:uuid", su.GetUser)
 	r.Run()
 }
+
