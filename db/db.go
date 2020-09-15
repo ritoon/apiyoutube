@@ -1,0 +1,16 @@
+package db
+
+import (
+	"github.com/ritoon/cours/discover/apiyoutube/model"
+)
+
+type DB interface {
+	DBUser
+}
+
+type DBUser interface {
+	AddUser(u model.User) error
+	UpdateUser(uuid string, u model.User) error
+	GetUser(uuid string) (*model.User, error)
+	DeleteUser(uuid string) error
+}
