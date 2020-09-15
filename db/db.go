@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/ritoon/cours/discover/apiyoutube/model"
+	"apiyoutube/model"
 )
 
 type DB interface {

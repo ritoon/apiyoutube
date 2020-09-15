@@ -1,4 +1,4 @@
-module github.com/ritoon/cours/discover/apiyoutube
+module apiyoutube
 
 go 1.15
 
