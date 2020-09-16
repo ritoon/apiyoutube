@@ -13,7 +13,8 @@ func main() {
 	su := service.NewUser(db)
 
 	r := gin.Default()
-	r.Use(middleware.VerifyJWT())
+	JWTSecret := "my_secret_key"
+	r.Use(middleware.VerifyJWT(JWTSecret))
 	r.GET("/user/:uuid", su.GetUser)
 	r.GET("/user", su.GetListUser)
 	r.POST("/user", su.CreateUser)
