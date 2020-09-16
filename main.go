@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/viper"
 
 	"apiyoutube/db/orm"
-	"apiyoutube/middleware"
 	"apiyoutube/service"
 )
 
@@ -25,7 +24,8 @@ func initApp(conf *Config) {
 	su := service.NewUser(db)
 	// init router.
 	r := gin.Default()
-	r.Use(middleware.VerifyJWT(conf.JWTSecret))
+	r.GET("/login", su.LoginUser)
+	//r.Use(middleware.VerifyJWT(conf.JWTSecret))
 	r.GET("/user/:uuid", su.GetUser)
 	r.GET("/user", su.GetListUser)
 	r.POST("/user", su.CreateUser)

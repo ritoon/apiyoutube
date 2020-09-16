@@ -78,3 +78,14 @@ func (db *MockDB) DeleteUser(uuid string) error {
 func (db *MockDB) GetListUser() (map[string]*model.User, error) {
 	return db.listUser, nil
 }
+
+func (db *MockDB) GetUserByEmail(email string) (*model.User, error) {
+
+	for _, u := range db.listUser {
+		if u.Email == email {
+			return u, nil
+		}
+	}
+
+	return nil, db.NewErrNotFound(email, nil)
+}

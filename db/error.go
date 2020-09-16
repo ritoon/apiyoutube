@@ -22,3 +22,11 @@ func NewError(param string, err error) *ErrorDB {
 func (e ErrorDB) Error() string {
 	return fmt.Sprintf("db: params:%v err:%v", e.Params, e.Err)
 }
+
+func NewErrNotFound(params string, err error) error {
+	return &ErrorDB{
+		Code:   http.StatusNotFound,
+		Params: params,
+		Err:    err,
+	}
+}

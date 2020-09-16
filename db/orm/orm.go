@@ -90,3 +90,8 @@ func (db *ORMDB) GetListUser() (map[string]*model.User, error) {
 	}
 	return users, nil
 }
+
+func (db *ORMDB) GetUserByEmail(email string) (*model.User, error) {
+	var u model.User
+	return &u, db.conn.Table("users").Where("email = ?", email).First(&u).Error
+}

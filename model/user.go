@@ -24,3 +24,8 @@ func (u User) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(aux)
 }
+
+type Login struct {
+	Email string `json:"email"`
+	Pass  string `json:"pass"`
+}

@@ -1,15 +1,16 @@
 package service
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
+	"fmt"
 	"log"
 	"net/http"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
 	"apiyoutube/db"
 	"apiyoutube/model"
+	"apiyoutube/util"
 )
 
 type ServiceUser struct {
@@ -53,8 +54,7 @@ func (su *ServiceUser) CreateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
 		return
 	}
-	passHash := sha256.Sum256([]byte(u.Pass))
-	u.Pass = base64.StdEncoding.EncodeToString(passHash[:])
+	u.Pass = util.Hash(u.Pass)
 	err = su.db.AddUser(&u)
 	if err != nil {
 		log.Println(err)
@@ -73,8 +73,7 @@ func (su *ServiceUser) UpdateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
 		return
 	}
-	passHash := sha256.Sum256([]byte(u.Pass))
-	u.Pass = string(passHash[:])
+	u.Pass = util.Hash(u.Pass)
 	err = su.db.UpdateUser(ctx.Param("uuid"), u)
 	if err != nil {
 		log.Println(err)
@@ -94,4 +93,51 @@ func (su *ServiceUser) DeleteUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, nil)
+}
+
+func (su *ServiceUser) LoginUser(ctx *gin.Context) {
+	var l model.Login
+	err := ctx.BindJSON(&l)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
+		return
+	}
+
+	u, err := su.db.GetUserByEmail(l.Email)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(err.(db.ErrorDB).Code, gin.H{"error": "db"})
+		return
+	}
+
+	if !util.HashValid(u.Pass, l.Pass) {
+		log.Println(err)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong user/pass"})
+		return
+	}
+
+	mySigningKey := []byte("my_secret_key")
+
+	type MyCustomClaims struct {
+		Foo  string `json:"foo"`
+		UUID string `json:"uuid"`
+		jwt.StandardClaims
+	}
+
+	// Create the Claims
+	claims := MyCustomClaims{
+		"bar",
+		u.UUID,
+		jwt.StandardClaims{
+			ExpiresAt: 15000,
+			Issuer:    "test",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, err := token.SignedString(mySigningKey)
+	fmt.Printf("%v %v", ss, err)
+
+	ctx.JSON(http.StatusOK, gin.H{"jwt": ss})
 }

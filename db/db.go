@@ -15,4 +15,5 @@ type DBUser interface {
 	// GetListUser return all users.
 	GetListUser() (map[string]*model.User, error)
 	DeleteUser(uuid string) error
+	GetUserByEmail(email string) (*model.User, error)
 }
