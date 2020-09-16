@@ -12,13 +12,17 @@ import (
 )
 
 func main() {
-
+	// get the current config
 	conf := getconfig()
+	// init app
+	initApp(conf)
+}
 
+func initApp(conf *Config) {
+	// create tools.
 	db := mock.New()
 	su := service.NewUser(db)
-
-	// init router
+	// init router.
 	r := gin.Default()
 	r.Use(middleware.VerifyJWT(conf.JWTSecret))
 	r.GET("/user/:uuid", su.GetUser)
