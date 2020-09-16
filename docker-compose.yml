@@ -1,0 +1,15 @@
+version: '3.6'
+services:
+  apiyoutube-database:
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_DB: apiyoutube
+      POSTGRES_USER: apiyoutube
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apiyoutube"]
+      interval: 3s
+      timeout: 3s
+      retries: 6
+    ports:
+      - 127.0.0.1:5432:5432
