@@ -47,8 +47,8 @@ func (su *ServiceUser) CreateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
 		return
 	}
-	pass_hash := sha256.Sum256([]byte(u.Pass))
-	u.Pass = string(pass_hash[:])
+	passHash := sha256.Sum256([]byte(u.Pass))
+	u.Pass = string(passHash[:])
 	err = su.db.AddUser(&u)
 	if err != nil {
 		log.Println(err)
