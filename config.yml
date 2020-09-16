@@ -1,1 +1,5 @@
 SECRET_KEY_JWT: my_secret_key
+POSTGRES_DB: apiyoutube
+POSTGRES_USER: apiyoutube
+POSTGRES_PASSWORD: password
+POSTGRES_PORT: 5432

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 
-	"apiyoutube/db/mock"
+	"apiyoutube/db/orm"
 	"apiyoutube/middleware"
 	"apiyoutube/service"
 )
@@ -20,7 +20,8 @@ func main() {
 
 func initApp(conf *Config) {
 	// create tools.
-	db := mock.New()
+	// db := mock.New()
+	db := orm.New(conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
 	su := service.NewUser(db)
 	// init router.
 	r := gin.Default()
@@ -28,11 +29,17 @@ func initApp(conf *Config) {
 	r.GET("/user/:uuid", su.GetUser)
 	r.GET("/user", su.GetListUser)
 	r.POST("/user", su.CreateUser)
+	r.DELETE("/user/:uuid", su.DeleteUser)
+	r.PUT("/user/:uuid", su.UpdateUser)
 	r.Run()
 }
 
 type Config struct {
-	JWTSecret string
+	JWTSecret string // SECRET_KEY_JWT: my_secret_key
+	DBName    string // POSTGRES_DB: apiyoutube
+	DBUser    string // POSTGRES_USER: apiyoutube
+	DBPass    string // POSTGRES_PASSWORD: password
+	DBPort    string // POSTGRES_PORT: 5432
 }
 
 func getconfig() *Config {
@@ -46,5 +53,9 @@ func getconfig() *Config {
 	}
 	var conf Config
 	conf.JWTSecret = viper.GetString("SECRET_KEY_JWT")
+	conf.DBName = viper.GetString("POSTGRES_DB")
+	conf.DBUser = viper.GetString("POSTGRES_USER")
+	conf.DBPass = viper.GetString("POSTGRES_PASSWORD")
+	conf.DBPort = viper.GetString("POSTGRES_PORT")
 	return &conf
 }

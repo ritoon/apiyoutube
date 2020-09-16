@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"log"
 	"net/http"
 
@@ -35,8 +36,13 @@ func (su *ServiceUser) GetUser(ctx *gin.Context) {
 }
 
 func (su *ServiceUser) GetListUser(ctx *gin.Context) {
-
-	ctx.JSON(http.StatusOK, su.db.GetListUser())
+	us, err := su.db.GetListUser()
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "db"})
+		return
+	}
+	ctx.JSON(http.StatusOK, us)
 }
 
 func (su *ServiceUser) CreateUser(ctx *gin.Context) {
@@ -48,7 +54,7 @@ func (su *ServiceUser) CreateUser(ctx *gin.Context) {
 		return
 	}
 	passHash := sha256.Sum256([]byte(u.Pass))
-	u.Pass = string(passHash[:])
+	u.Pass = base64.StdEncoding.EncodeToString(passHash[:])
 	err = su.db.AddUser(&u)
 	if err != nil {
 		log.Println(err)
@@ -57,4 +63,35 @@ func (su *ServiceUser) CreateUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, u)
+}
+
+func (su *ServiceUser) UpdateUser(ctx *gin.Context) {
+	var u model.User
+	err := ctx.BindJSON(&u)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parsing user"})
+		return
+	}
+	passHash := sha256.Sum256([]byte(u.Pass))
+	u.Pass = string(passHash[:])
+	err = su.db.UpdateUser(ctx.Param("uuid"), u)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "db"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, u)
+}
+
+func (su *ServiceUser) DeleteUser(ctx *gin.Context) {
+	err := su.db.DeleteUser(ctx.Param("uuid"))
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "db"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, nil)
 }

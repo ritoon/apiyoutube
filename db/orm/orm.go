@@ -1,6 +1,7 @@
-package mock
+package orm
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -16,10 +17,10 @@ type ORMDB struct {
 }
 
 // New is creating a user list.
-func New() *ORMDB {
+func New(user, pass, name, port string) *ORMDB {
 	var db ORMDB
 
-	dsn := "user=gorm password=gorm dbname=gorm port=5432 sslmode=disable TimeZone=Paris/France"
+	dsn := fmt.Sprintf("host=127.0.0.1 user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Europe/Paris", user, pass, name, port)
 	var err error
 	db.conn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -59,25 +60,33 @@ func (db *ORMDB) AddUser(u *model.User) error {
 // UpdateUser is updating a user in the ORMDB.
 // this send an error if the user allready exsits in the ORMDB.
 func (db *ORMDB) UpdateUser(uuid string, u model.User) error {
-	// TODO
-	return nil
+	return db.conn.Table("users").Where("uuid = ?", uuid).Updates(u).Error
 }
 
 // GetUser retrives form the ORMDB a given uuid.
 // this send an error if the don't exsits in the ORMDB.
 func (db *ORMDB) GetUser(uuid string) (*model.User, error) {
-	// TODO
-	return db.listUser[uuid], nil
+	var u model.User
+	return &u, db.conn.Table("users").Where("uuid = ?", uuid).First(&u).Error
 }
 
 // DeleteUser is deleting the given uuid user from the userList.
 // if the user don't exists in the userList this function sends an error.
 func (db *ORMDB) DeleteUser(uuid string) error {
-	// TODO
-	return nil
+	return db.conn.Table("users").Where("uuid = ?", uuid).Delete(&model.User{}).Error
 }
 
 // GetListUser retrive all users from the db.
-func (db *ORMDB) GetListUser() map[string]*model.User {
-	return db.listUser
+func (db *ORMDB) GetListUser() (map[string]*model.User, error) {
+	users := map[string]*model.User{}
+	usersDB, error := db.conn.Limit(-1).Model(&model.User{}).Rows()
+	if error != nil {
+		return nil, error
+	}
+	for usersDB.Next() {
+		var user model.User
+		error = db.conn.ScanRows(usersDB, &user)
+		users[user.UUID] = &user
+	}
+	return users, nil
 }

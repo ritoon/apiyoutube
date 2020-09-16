@@ -13,6 +13,6 @@ type DBUser interface {
 	UpdateUser(uuid string, u model.User) error
 	GetUser(uuid string) (*model.User, error)
 	// GetListUser return all users.
-	GetListUser() map[string]*model.User
+	GetListUser() (map[string]*model.User, error)
 	DeleteUser(uuid string) error
 }

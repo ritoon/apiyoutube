@@ -75,6 +75,6 @@ func (db *MockDB) DeleteUser(uuid string) error {
 }
 
 // GetListUser retrive all users from the db.
-func (db *MockDB) GetListUser() map[string]*model.User {
-	return db.listUser
+func (db *MockDB) GetListUser() (map[string]*model.User, error) {
+	return db.listUser, nil
 }
