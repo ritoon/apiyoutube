@@ -3,7 +3,7 @@ package model
 import "encoding/json"
 
 type User struct {
-	UUID      string `json:"uuid"`
+	UUID      string `json:"uuid" gorm:"primaryKey"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
