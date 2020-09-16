@@ -21,7 +21,7 @@ func main() {
 func initApp(conf *Config) {
 	// create tools.
 	// db := mock.New()
-	db := orm.New(conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
+	db := orm.New(conf.DBHost, conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
 	su := service.NewUser(db)
 	// init router.
 	r := gin.Default()
@@ -40,6 +40,7 @@ type Config struct {
 	DBUser    string // POSTGRES_USER: apiyoutube
 	DBPass    string // POSTGRES_PASSWORD: password
 	DBPort    string // POSTGRES_PORT: 5432
+	DBHost    string // POSTGRES_HOST: 127.0.0.1
 }
 
 func getconfig() *Config {
@@ -52,10 +53,11 @@ func getconfig() *Config {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 	var conf Config
-	conf.JWTSecret = viper.GetString("SECRET_KEY_JWT")
-	conf.DBName = viper.GetString("POSTGRES_DB")
-	conf.DBUser = viper.GetString("POSTGRES_USER")
-	conf.DBPass = viper.GetString("POSTGRES_PASSWORD")
-	conf.DBPort = viper.GetString("POSTGRES_PORT")
+	conf.JWTSecret = viper.GetString("DB.SECRET_KEY_JWT")
+	conf.DBName = viper.GetString("DB.POSTGRES_DB")
+	conf.DBUser = viper.GetString("DB.POSTGRES_USER")
+	conf.DBPass = viper.GetString("DB.POSTGRES_PASSWORD")
+	conf.DBPort = viper.GetString("DB.POSTGRES_PORT")
+	conf.DBHost = viper.GetString("DB.POSTGRES_HOST")
 	return &conf
 }

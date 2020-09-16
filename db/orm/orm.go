@@ -17,10 +17,10 @@ type ORMDB struct {
 }
 
 // New is creating a user list.
-func New(user, pass, name, port string) *ORMDB {
+func New(host, user, pass, name, port string) *ORMDB {
 	var db ORMDB
 
-	dsn := fmt.Sprintf("host=127.0.0.1 user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Europe/Paris", user, pass, name, port)
+	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Europe/Paris", host, user, pass, name, port)
 	var err error
 	db.conn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
