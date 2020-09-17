@@ -22,7 +22,7 @@ func initApp(conf *Config) {
 	// create tools.
 	// db := mock.New()
 	db := orm.New(conf.DBHost, conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
-	su := service.NewUser(db)
+	su := service.NewUser(db, conf.JWTSecret)
 	// init router.
 	r := gin.Default()
 	r.POST("/login", su.LoginUser)
@@ -55,7 +55,7 @@ func getconfig() *Config {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 	var conf Config
-	conf.JWTSecret = viper.GetString("DB.SECRET_KEY_JWT")
+	conf.JWTSecret = viper.GetString("SECRET_KEY_JWT")
 	conf.DBName = viper.GetString("DB.POSTGRES_DB")
 	conf.DBUser = viper.GetString("DB.POSTGRES_USER")
 	conf.DBPass = viper.GetString("DB.POSTGRES_PASSWORD")

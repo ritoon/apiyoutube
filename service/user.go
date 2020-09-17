@@ -3,21 +3,25 @@ package service
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"apiyoutube/db"
+	"apiyoutube/middleware"
 	"apiyoutube/model"
 	"apiyoutube/util"
 )
 
 type ServiceUser struct {
-	db db.DB
+	db        db.DB
+	SecretJWT string
 }
 
-func NewUser(db db.DB) *ServiceUser {
+func NewUser(db db.DB, secret string) *ServiceUser {
 	return &ServiceUser{
-		db: db,
+		db:        db,
+		SecretJWT: secret,
 	}
 }
 
@@ -104,16 +108,18 @@ func (su *ServiceUser) LoginUser(ctx *gin.Context) {
 
 	u, err := su.db.GetUserByEmail(l.Email)
 	if err != nil {
-		log.Println(err)
+		log.Printf("service: try to get into the db %v", err)
 		ctx.JSON(err.(db.ErrorDB).Code, gin.H{"error": "db"})
 		return
 	}
 
-	if !util.HashValid(u.Pass, l.Pass) {
-		log.Println(err)
+	if !util.HashValid(l.Pass, u.Pass) {
+		log.Printf("service: the hash is not valid")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "wrong user/pass"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"jwt": "jwtValue"})
+	jwtValue := middleware.GenerateJWT(su.SecretJWT, u.UUID, time.Now().Add(time.Hour*3))
+
+	ctx.JSON(http.StatusOK, gin.H{"jwt": jwtValue})
 }
