@@ -55,7 +55,7 @@ func getconfig() *Config {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 	var conf Config
-	conf.JWTSecret = viper.GetString("DB.SECRET_KEY_JWT")
+	conf.JWTSecret = viper.GetString("SECRET_KEY_JWT")
 	conf.DBName = viper.GetString("DB.POSTGRES_DB")
 	conf.DBUser = viper.GetString("DB.POSTGRES_USER")
 	conf.DBPass = viper.GetString("DB.POSTGRES_PASSWORD")

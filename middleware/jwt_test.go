@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 
 func TestVerifyJWT(t *testing.T) {
 	token := GenerateJWT("my_secret_key", "test")
+	fmt.Println(token)
 	verify := VerifyJWT("my_secret_key")
 	r := gin.Default()
 	r.GET("/auth", verify)
