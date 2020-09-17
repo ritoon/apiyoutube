@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	topic = "user_login"
+	TopicUserLogin = "user_login"
 )
 
 type MessageLogin struct {
@@ -18,20 +18,24 @@ type MessageLogin struct {
 	EventTime   time.Time `json:"event_time"`
 }
 
-func New(host string) (*kafka.Writer, *kafka.Reader) {
+func New(host string) (*kafka.Writer, func(string, string) *kafka.Reader) {
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{host},
-		Topic:    topic,
+		Topic:    TopicUserLogin,
 		Balancer: &kafka.LeastBytes{},
 	})
-	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        []string{host}, //"localhost:9092"}
-		GroupID:        "consumer-group-id",
-		Topic:          topic,
-		MinBytes:       10e3,        // 10KB
-		MaxBytes:       10e6,        // 10MB
-		CommitInterval: time.Second, // flushes commits to Kafka every second
-		MaxWait:        time.Second / 10,
-	})
-	return w, r
+
+	f := func(group, topic string) *kafka.Reader {
+		return kafka.NewReader(kafka.ReaderConfig{
+			Brokers:        []string{host}, //"localhost:9092"}
+			GroupID:        group,
+			Topic:          topic,
+			MinBytes:       10e3,        // 10KB
+			MaxBytes:       10e6,        // 10MB
+			CommitInterval: time.Second, // flushes commits to Kafka every second
+			MaxWait:        time.Second,
+		})
+	}
+
+	return w, f
 }

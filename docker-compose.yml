@@ -1,5 +1,12 @@
 version: '3.6'
 services:
+  apiyoutube-elastic:
+    image: elasticsearch:7.9.1
+    ports:
+      - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9300:9300"
+    environment:
+      'discovery.type': single-node
   apiyoutube-database:
     image: postgres:12-alpine
     environment:

@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eapache/queue v1.1.0
+	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200917075812-57f95987da35
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.1.2

@@ -8,6 +8,7 @@ import (
 
 	"apiyoutube/cache"
 	"apiyoutube/db/orm"
+	"apiyoutube/elastic"
 	"apiyoutube/middleware"
 	"apiyoutube/queue"
 	"apiyoutube/service"
@@ -25,11 +26,14 @@ func initApp(conf *Config) {
 	cache := cache.New()
 
 	// create the queue.
-	queueWriter, queueReader := queue.New(conf.KafkaHost)
+	queueWriter, funcReader := queue.New(conf.KafkaHost)
+
+	// create elastic
+	elasticConn := elastic.New()
 
 	db := orm.New(conf.DBHost, conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
 	su := service.NewUser(db, cache, queueWriter, conf.JWTSecret)
-	ss := service.NewStats(cache, queueReader)
+	ss := service.NewStats(cache, elasticConn, funcReader)
 	// init router.
 	r := gin.Default()
 	r.GET("/stats-login", ss.StatLogin)

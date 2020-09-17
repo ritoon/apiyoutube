@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,25 +9,31 @@ import (
 	"net/http"
 	"time"
 
+	elasticsearch "github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	"github.com/google/uuid"
 	kafka "github.com/segmentio/kafka-go"
 
 	"apiyoutube/queue"
 )
 
 type ServiceStats struct {
-	kafkaReader *kafka.Reader
+	kafkaReader func(string, string) *kafka.Reader
 	cache       *redis.Client
+	elastic     *elasticsearch.Client
 }
 
-func NewStats(cache *redis.Client, reader *kafka.Reader) *ServiceStats {
+func NewStats(cache *redis.Client, elastic *elasticsearch.Client, reader func(string, string) *kafka.Reader) *ServiceStats {
 
 	ss := &ServiceStats{
 		kafkaReader: reader,
 		cache:       cache,
+		elastic:     elastic,
 	}
 	go ss.sendMessageToRedis()
+	go ss.sendMessageToElastic()
 	return ss
 }
 
@@ -37,27 +44,56 @@ func (ss *ServiceStats) StatLogin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"stat": res.Val()})
 }
 
-func (ss *ServiceStats) sendMessageToRedis() {
+func (ss *ServiceStats) sendMessageToElastic() {
+	reader := ss.kafkaReader("group-elastic", queue.TopicUserLogin)
 	ctx := context.Background()
 	for {
-		m, err := ss.kafkaReader.FetchMessage(ctx)
-		if err != nil {
-			break
-		}
-		// fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), ))
-		var msg queue.MessageLogin
-		err = json.Unmarshal(m.Value, &msg)
+		msg, origin, err := ss.parseMessage(ctx, reader)
 		if err != nil {
 			log.Println(err)
 		}
+		log.Println(msg, origin)
 
+		req := esapi.IndexRequest{
+			Index:      "userlogin",
+			DocumentID: uuid.New().String(),
+			Body:       bytes.NewBuffer(origin.Value),
+			Refresh:    "true",
+		}
+
+		// Perform the request with the client.
+		res, err := req.Do(context.Background(), ss.elastic)
+		if err != nil {
+			log.Fatalf("Error getting response: %s", err)
+		}
+		log.Println(res)
+		reader.CommitMessages(ctx, *origin)
+	}
+}
+
+func (ss *ServiceStats) sendMessageToRedis() {
+	reader := ss.kafkaReader("group-redis", queue.TopicUserLogin)
+	ctx := context.Background()
+	for {
+
+		msg, origin, err := ss.parseMessage(ctx, reader)
+		if err != nil {
+			log.Println(err)
+		}
 		now := fmt.Sprintf("%v-%v-%v", msg.EventTime.Month, msg.EventTime.Day, msg.EventTime.Hour)
-		log.Println("get from kafka", m.Key, msg)
-		pf := ss.cache.PFAdd(now, string(m.Key))
+		pf := ss.cache.PFAdd(now, string(origin.Key))
 		if pf.Err != nil {
 			fmt.Println("service/stats: err cache", pf.Err())
 		}
-
-		ss.kafkaReader.CommitMessages(ctx, m)
+		reader.CommitMessages(ctx, *origin)
 	}
+}
+
+func (ss *ServiceStats) parseMessage(ctx context.Context, reader *kafka.Reader) (*queue.MessageLogin, *kafka.Message, error) {
+	m, err := reader.FetchMessage(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	var msg queue.MessageLogin
+	return &msg, &m, json.Unmarshal(m.Value, &msg)
 }
