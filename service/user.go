@@ -1,11 +1,13 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 
 	"apiyoutube/db"
 	"apiyoutube/middleware"
@@ -15,13 +17,15 @@ import (
 
 type ServiceUser struct {
 	db        db.DB
+	cache     *redis.Client
 	SecretJWT string
 }
 
-func NewUser(db db.DB, secret string) *ServiceUser {
+func NewUser(db db.DB, cache *redis.Client, secret string) *ServiceUser {
 	return &ServiceUser{
 		db:        db,
 		SecretJWT: secret,
+		cache:     cache,
 	}
 }
 
@@ -119,7 +123,22 @@ func (su *ServiceUser) LoginUser(ctx *gin.Context) {
 		return
 	}
 
+	// update cache
+	now := fmt.Sprintf("%v-%v-%v", time.Now().Month, time.Now().Day, time.Now().Hour)
+	pf := su.cache.PFAdd(now, u.UUID)
+	if pf.Err != nil {
+		fmt.Println("err cache", pf.Err)
+	}
+	// create JWT
 	jwtValue := middleware.GenerateJWT(su.SecretJWT, u.UUID, time.Now().Add(time.Hour*3))
 
 	ctx.JSON(http.StatusOK, gin.H{"jwt": jwtValue})
+}
+
+func (su *ServiceUser) StatUser(ctx *gin.Context) {
+
+	now := fmt.Sprintf("%v-%v-%v", time.Now().Month, time.Now().Day, time.Now().Hour)
+	res := su.cache.PFCount(now)
+	fmt.Printf("key %v res %v", now, res)
+	ctx.JSON(http.StatusOK, gin.H{"stat": res.String()})
 }

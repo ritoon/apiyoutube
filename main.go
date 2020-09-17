@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 
+	"apiyoutube/cache"
 	"apiyoutube/db/orm"
 	"apiyoutube/middleware"
 	"apiyoutube/service"
@@ -21,11 +22,14 @@ func main() {
 func initApp(conf *Config) {
 	// create tools.
 	// db := mock.New()
+	cache := cache.New()
+
 	db := orm.New(conf.DBHost, conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
-	su := service.NewUser(db, conf.JWTSecret)
+	su := service.NewUser(db, cache, conf.JWTSecret)
 	// init router.
 	r := gin.Default()
 	r.POST("/login", su.LoginUser)
+	r.GET("/stats", su.StatUser)
 	user := r.Group("/user")
 	user.Use(middleware.VerifyJWT(conf.JWTSecret))
 	user.GET("/:uuid", su.GetUser)
