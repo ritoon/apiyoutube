@@ -140,5 +140,5 @@ func (su *ServiceUser) StatUser(ctx *gin.Context) {
 	now := fmt.Sprintf("%v-%v-%v", time.Now().Month, time.Now().Day, time.Now().Hour)
 	res := su.cache.PFCount(now)
 	fmt.Printf("key %v res %v", now, res)
-	ctx.JSON(http.StatusOK, gin.H{"stat": res.String()})
+	ctx.JSON(http.StatusOK, gin.H{"stat": res.Val()})
 }
