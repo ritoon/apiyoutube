@@ -3,11 +3,18 @@ package middleware
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"time"
 
 	"fmt"
 	"net/http"
 	"strings"
 )
+
+type MyCustomClaims struct {
+	Foo  string `json:"foo"`
+	UUID string `json:"uuid"`
+	jwt.StandardClaims
+}
 
 func VerifyJWT(secret string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -25,8 +32,11 @@ func VerifyJWT(secret string) gin.HandlerFunc {
 			})
 			return
 		}
+		fmt.Println(res[1])
+		fmt.Println([]byte(secret))
+		fmt.Println([]byte("my_secret_key"))
 
-		token, err := jwt.Parse(res[1], func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(res[1], &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
@@ -40,7 +50,7 @@ func VerifyJWT(secret string) gin.HandlerFunc {
 			return
 		}
 
-		if claims, ok := token.Claims.(MyCustomClaims); ok && token.Valid {
+		if claims, ok := token.Claims.(*MyCustomClaims); ok && token.Valid {
 			fmt.Println(claims.Foo, claims.UUID)
 		} else {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
@@ -50,23 +60,15 @@ func VerifyJWT(secret string) gin.HandlerFunc {
 	}
 }
 
-type MyCustomClaims struct {
-	Foo  string `json:"foo"`
-	UUID string `json:"uuid"`
-	jwt.StandardClaims
-}
-
 func GenerateJWT(secret, uuid string) string {
 	// mySigningKey := []byte("my_secret_key")
 
 	// Create the Claims
 	claims := MyCustomClaims{
 		"bar",
-		// u.UUID,
 		uuid,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
-			Issuer:    "test",
+			ExpiresAt: time.Now().Unix() + 1500,
 		},
 	}
 
