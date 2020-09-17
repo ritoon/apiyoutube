@@ -9,6 +9,7 @@ import (
 	"apiyoutube/cache"
 	"apiyoutube/db/orm"
 	"apiyoutube/middleware"
+	"apiyoutube/queue"
 	"apiyoutube/service"
 )
 
@@ -20,16 +21,19 @@ func main() {
 }
 
 func initApp(conf *Config) {
-	// create tools.
-	// db := mock.New()
+	// create cache
 	cache := cache.New()
 
+	// create the queue.
+	queueWriter, queueReader := queue.New(conf.KafkaHost)
+
 	db := orm.New(conf.DBHost, conf.DBUser, conf.DBPass, conf.DBName, conf.DBPort)
-	su := service.NewUser(db, cache, conf.JWTSecret)
+	su := service.NewUser(db, cache, queueWriter, conf.JWTSecret)
+	ss := service.NewStats(cache, queueReader)
 	// init router.
 	r := gin.Default()
+	r.GET("/stats-login", ss.StatLogin)
 	r.POST("/login", su.LoginUser)
-	r.GET("/stats", su.StatUser)
 	user := r.Group("/user")
 	user.Use(middleware.VerifyJWT(conf.JWTSecret))
 	user.GET("/:uuid", su.GetUser)
@@ -47,6 +51,7 @@ type Config struct {
 	DBPass    string // POSTGRES_PASSWORD: password
 	DBPort    string // POSTGRES_PORT: 5432
 	DBHost    string // POSTGRES_HOST: 127.0.0.1
+	KafkaHost string // KAFKA_HOST: 127.0.0.1
 }
 
 func getconfig() *Config {
@@ -65,5 +70,6 @@ func getconfig() *Config {
 	conf.DBPass = viper.GetString("DB.POSTGRES_PASSWORD")
 	conf.DBPort = viper.GetString("DB.POSTGRES_PORT")
 	conf.DBHost = viper.GetString("DB.POSTGRES_HOST")
+	conf.KafkaHost = viper.GetString("KAFKA_HOST")
 	return &conf
 }

@@ -6,3 +6,5 @@ DB:
     POSTGRES_PORT: 5432
     POSTGRES_HOST: 127.0.0.1
 ENV: local
+
+KAFKA_HOST: localhost:9092
