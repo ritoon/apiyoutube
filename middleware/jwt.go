@@ -1,6 +1,10 @@
 package middleware
 
 import (
+	"errors"
+	"log"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
@@ -26,47 +30,45 @@ func VerifyJWT(secret string) gin.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(res[1], func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(secret), nil
-		})
+		_, err := parseJWT(secret, res[1])
 
 		if err != nil {
+			log.Println(err)
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": fmt.Sprintf("Invalid user token: %s, err: %s", res[1], err.Error()),
+				"error": "JWT not valid",
 			})
 			return
-		}
-
-		if claims, ok := token.Claims.(MyCustomClaims); ok && token.Valid {
-			fmt.Println(claims.Foo, claims.UUID)
-		} else {
-			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Invalid user claims",
-			})
 		}
 	}
 }
 
-type MyCustomClaims struct {
-	Foo  string `json:"foo"`
-	UUID string `json:"uuid"`
+func parseJWT(secret, tokenValue string) (*CustomClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenValue, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok {
+		return nil, errors.New("not able to cast JWT")
+	}
+	return claims, nil
+}
+
+type CustomClaims struct {
+	UUID string
 	jwt.StandardClaims
 }
 
-func GenerateJWT(secret, uuid string) string {
-	// mySigningKey := []byte("my_secret_key")
+func GenerateJWT(secret, uuid string, exp time.Time) string {
 
 	// Create the Claims
-	claims := MyCustomClaims{
-		"bar",
-		// u.UUID,
+	claims := CustomClaims{
 		uuid,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
-			Issuer:    "test",
+			ExpiresAt: exp.Unix(),
 		},
 	}
 
