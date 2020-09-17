@@ -1,11 +1,9 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
 	"apiyoutube/db"
@@ -117,27 +115,5 @@ func (su *ServiceUser) LoginUser(ctx *gin.Context) {
 		return
 	}
 
-	mySigningKey := []byte("my_secret_key")
-
-	type MyCustomClaims struct {
-		Foo  string `json:"foo"`
-		UUID string `json:"uuid"`
-		jwt.StandardClaims
-	}
-
-	// Create the Claims
-	claims := MyCustomClaims{
-		"bar",
-		u.UUID,
-		jwt.StandardClaims{
-			ExpiresAt: 15000,
-			Issuer:    "test",
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := token.SignedString(mySigningKey)
-	fmt.Printf("%v %v", ss, err)
-
-	ctx.JSON(http.StatusOK, gin.H{"jwt": ss})
+	ctx.JSON(http.StatusOK, gin.H{"jwt": "jwtValue"})
 }

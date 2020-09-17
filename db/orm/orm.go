@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"apiyoutube/util"
 	"fmt"
 	"log"
 
@@ -34,10 +35,12 @@ func New(host, user, pass, name, port string) *ORMDB {
 	return &db
 }
 
-func (db ORMDB) initUser() {
+func (db *ORMDB) initUser() {
 	u := model.User{
 		FirstName: "Rob",
 		LastName:  "Pike",
+		Email:     "r.pick@google.com",
+		Pass:      util.Hash("toto"),
 	}
 
 	db.AddUser(&u)
@@ -45,6 +48,8 @@ func (db ORMDB) initUser() {
 	u2 := model.User{
 		FirstName: "Marie",
 		LastName:  "Curie",
+		Email:     "marie.curie@pierre.com",
+		Pass:      util.Hash("test"),
 	}
 
 	db.AddUser(&u2)

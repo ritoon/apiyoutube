@@ -40,12 +40,38 @@ func VerifyJWT(secret string) gin.HandlerFunc {
 			return
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			fmt.Println(claims["foo"], claims["nbf"])
+		if claims, ok := token.Claims.(MyCustomClaims); ok && token.Valid {
+			fmt.Println(claims.Foo, claims.UUID)
 		} else {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "Invalid user claims",
 			})
 		}
 	}
+}
+
+type MyCustomClaims struct {
+	Foo  string `json:"foo"`
+	UUID string `json:"uuid"`
+	jwt.StandardClaims
+}
+
+func GenerateJWT(secret, uuid string) string {
+	// mySigningKey := []byte("my_secret_key")
+
+	// Create the Claims
+	claims := MyCustomClaims{
+		"bar",
+		// u.UUID,
+		uuid,
+		jwt.StandardClaims{
+			ExpiresAt: 15000,
+			Issuer:    "test",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	ss, err := token.SignedString([]byte(secret))
+	fmt.Printf("%v %v", ss, err)
+	return ss
 }
